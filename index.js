@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
-const { clientId, guildId, token } = require('./config.json');
+const { token } = require('./config.json');
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessageTyping] });
@@ -17,7 +17,7 @@ client.once(Events.ClientReady, readyClient => {
 	client.user.setActivity('st!help | dogeiscut.github.io');
 });
 
-client.on('message', message => {
+client.on(Events.MessageCreate, message => {
     if (message.author.id === client.user.id) return;
     if (message.content.startsWith(prefix)) return;
     
@@ -31,7 +31,7 @@ client.on('message', message => {
     console.log(wordData)
 });
 
-client.on('message', message => {
+client.on(Events.MessageCreate, message => {
     if (!message.content.startsWith(prefix)) return;
     
     const args = message.content.slice(prefix.length).split(/ +/);
