@@ -9,3 +9,4 @@
 - [ ] Error handling
 - [ ] Transfering between starboards
 - [ ] Warning for deleting starboards
+- [ ] Prevent duplicate starboards
