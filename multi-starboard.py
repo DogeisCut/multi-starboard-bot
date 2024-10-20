@@ -183,7 +183,7 @@ async def on_raw_reaction_add(payload):
 def create_embed(message, starboard):
 	embed = discord.Embed(
 		description=message.content,
-		timestamp=datetime.utcnow()
+		timestamp=datetime.now()
 	)
 	embed.set_author(
 		name=message.author.display_name,

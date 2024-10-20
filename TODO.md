@@ -12,7 +12,7 @@
 - [ ] Prevent duplicate starboards
 - [ ] Help command
 - [ ] Better create command
-- [ ] Fix embed timestamp
+- [X] Fix embed timestamp
 - [ ] Fix embed attachments sent via a link
 - [X] Fix the same user counting multiple times with multiple different emojis.
   - [X] Fix multiple messages being sent when a user uses multiple emoji quickly.
