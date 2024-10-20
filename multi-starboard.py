@@ -16,7 +16,7 @@ data_file = 'starboards.json'
 
 @bot.event
 async def on_ready():
-	activity = discord.Game(name=config.activty)
+	activity = discord.CustomActivity(name=config.activty)
 	await bot.change_presence(activity=activity)
 	print(f'{bot.user} has connected.')
 
