@@ -1,0 +1,9 @@
+- [ ] Removing stars from messages
+- [ ] Channel filter option for starboards
+- [ ] Member filter option for starboards
+- [ ] Role filter option for starboards
+- [ ] Fix edit command
+- [ ] Slash command
+- [ ] Restructure code (src files, functions, etc)
+- [ ] Disallow/allow nsfw channel option for starboards
+- [ ] Error handling
