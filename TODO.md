@@ -15,3 +15,4 @@
 - [ ] Fix embed timestamp
 - [ ] Fix embed attachments sent via a link
 - [ ] Fix the same user counting multiple times with multiple different emojis.
+- [ ] Fix embed/message not updating on reaction removal/clear. 
