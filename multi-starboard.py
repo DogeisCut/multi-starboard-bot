@@ -5,13 +5,26 @@ import os
 import logging
 from datetime import datetime
 from auth import token
+import config
 
 intents = discord.Intents.all()
 intents.guilds = True
 
-bot = commands.Bot(command_prefix='star!', intents=intents)
+bot = commands.Bot(command_prefix=config.prefixes, intents=intents, case_insensitive=True)
 
 data_file = 'starboards.json'
+
+@bot.event
+async def on_ready():
+	activity = discord.Game(name=config.activty)
+	await bot.change_presence(activity=activity)
+	print(f'{bot.user} has connected.')
+
+	if config.trigger_on_mention:
+		@bot.event
+		async def on_message(message):
+			if bot.user.mentioned_in(message):
+				await message.channel.send(f'My prefixes are: {", ".join(config.prefixes)}')
 
 def load_data():
 	if os.path.exists(data_file):
@@ -26,13 +39,10 @@ def save_data(data):
 @bot.command(name='create')
 async def create_starboard(ctx, *, args: str):
 	if not ctx.message.author.guild_permissions.administrator:
-		await ctx.reply('Why are you trying to make starboards when you arent even an admin?')
+		await ctx.reply('You need to be an admin to create starboards!')
 		return
 	
 	args = args.split()
-	print(args)
-
-	# Parsing the command arguments
 	channel_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--channel=')), "this")
 	name = next((arg.split('=')[1] for arg in args if arg.startswith('--name=')), "Starboard")
 	emojis_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--emojis=')), "🌟,⭐,✨")
@@ -48,11 +58,7 @@ async def create_starboard(ctx, *, args: str):
 		await ctx.reply('Invalid value for `Star Count`. It must be an integer.')
 		return
 	
-	try:
-		self_starring = self_starring_arg.lower() == 'true'
-	except ValueError:
-		await ctx.reply('Invalid value for `Allow Self Starring`. It must be true or false.')
-		return
+	self_starring = self_starring_arg.lower() == 'true'
 	
 	new_starboard = {
 		"emojis": [emoji for emoji in emojis_arg.split(',')],
@@ -70,14 +76,10 @@ async def create_starboard(ctx, *, args: str):
 	save_data(data)
 	await ctx.send(f'Starboard **{name}** created!')
 
-# @bot.slash_command(name="create", description="Creates a new Starboard.")
-# async def create_starboard_slash(ctx, channel, name, emojis, requirement, allow_self_star, color):
-#     await ctx.respond(message)
-
 @bot.command(name='remove')
 async def remove_starboard(ctx, identifier: str):
 	if not ctx.message.author.guild_permissions.administrator:
-		await ctx.reply('Why are you trying to remove starboards when you arent even an admin?')
+		await ctx.reply('You need to be an admin to remove starboards!')
 		return
 
 	data = load_data()
@@ -94,7 +96,7 @@ async def remove_starboard(ctx, identifier: str):
 @bot.command(name='edit')
 async def edit_starboard(ctx, identifier: str, property: str, value):
 	if not ctx.message.author.guild_permissions.administrator:
-		await ctx.reply('Why are you trying to edit starboards when you arent even an admin?')
+		await ctx.reply('You need to be an admin to edit starboards!')
 		return
 	
 	data = load_data()
@@ -123,16 +125,11 @@ async def on_raw_reaction_add(payload):
 	message_id = payload.message_id
 	guild_id = payload.guild_id
 
-	print(payload)
-
-	if user_id == bot.user.id:  # Check if the bot itself reacted
-		print("Bot react, ignoring...")
+	if user_id == bot.user.id:
 		return
 		
-	# Fetch the channel and message
 	message_channel = bot.get_channel(channel_id)
 	if message_channel is None:
-		print("Reacted message channel doesnt exist!")
 		return
 	
 	message = await message_channel.fetch_message(message_id)
@@ -142,16 +139,14 @@ async def on_raw_reaction_add(payload):
 	
 	for starboard in starboards:
 		if str(emoji) in starboard['emojis']:
-			# Count all reactions except those from the bot and the owner of the message's reaction
 			emoji_count = sum(
 				r.count for r in message.reactions 
 				if str(r.emoji) in starboard['emojis'] and 
 				(r.me is False) and 
-				(user_id != message.author.id or starboard['allow_self_starring'])  # Exclude owner's reaction if self-starring is not allowed
+				(user_id != message.author.id or starboard['allow_self_starring'])
 			)
 
 			if emoji_count >= starboard['emoji_count']:
-				# Check if the message is already starred
 				starred_message = next((msg for msg in starboard['starred_messages'] if msg['message'] == str(message.id)), None)
 
 				embed = discord.Embed(
@@ -163,10 +158,8 @@ async def on_raw_reaction_add(payload):
 					icon_url=message.author.avatar.url
 				)
 
-				# Add fields for source and attachment if applicable
 				embed.add_field(name="**Source**", value=f"[Jump!]({message.jump_url})", inline=False)
 				
-				# Add attachment field only if it's not an image/video
 				if message.attachments:
 					for attachment in message.attachments:
 						if not attachment.url.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.mp4', '.webm', '.webp')):
@@ -181,17 +174,14 @@ async def on_raw_reaction_add(payload):
 				embed.color = int(starboard['color'].lstrip('#'), 16)
 
 				if starred_message:
-					# Edit the existing starboard message
 					starboard_message_id = starred_message['starboard_message']
 					starboard_channel = bot.get_channel(int(starboard['channel_id']))
 					if starboard_channel:
 						existing_message = await starboard_channel.fetch_message(starboard_message_id)
 						await existing_message.edit(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{starboard_channel.id}>", embeds=[embed])
-						# Update the stars count in the saved data
 						starred_message['stars'] = emoji_count
 						save_data(data)
 				else:
-					# Send a new starboard message
 					channel = bot.get_channel(int(starboard['channel_id']))
 					if channel is None:
 						return

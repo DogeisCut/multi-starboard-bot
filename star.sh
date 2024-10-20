@@ -1,1 +1,1 @@
-cd R:/python experements/multi-starboard; until (python multi-starboard.py) do :; done;
+cd R:/python experements/multi-starboard; source .venv/bin/activate; until (python multi-starboard.py) do :; done;
