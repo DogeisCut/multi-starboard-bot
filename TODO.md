@@ -14,3 +14,4 @@
 - [ ] Better create command
 - [ ] Fix embed timestamp
 - [ ] Fix embed attachments sent via a link
+- [ ] Fix the same user counting multiple times with multiple different emojis.
