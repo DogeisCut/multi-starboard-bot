@@ -14,7 +14,9 @@
 - [ ] Better create command
 - [ ] Fix embed timestamp
 - [ ] Fix embed attachments sent via a link
-- [ ] Fix the same user counting multiple times with multiple different emojis.
+- [X] Fix the same user counting multiple times with multiple different emojis.
+  - [X] Fix multiple messages being sent when a user uses multiple emoji quickly.
+  - the message technically doesn't exist yet when it goes to check for duplicates so it queues up another one
 - [ ] Fix embed/message not updating on reaction removal/clear. 
 - [ ] convert starboards.json to a database
 - [ ] Handle deleting messages/starboard messages

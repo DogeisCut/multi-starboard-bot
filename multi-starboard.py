@@ -6,6 +6,9 @@ import logging
 from datetime import datetime
 from auth import token
 import config
+import asyncio
+
+message_locks = {}
 
 intents = discord.Intents.all()
 intents.guilds = True
@@ -127,74 +130,79 @@ async def on_raw_reaction_add(payload):
 
 	if user_id == bot.user.id:
 		return
+
+	if message_id not in message_locks:
+		message_locks[message_id] = asyncio.Lock()
+
+	async with message_locks[message_id]:
+		message_channel = bot.get_channel(channel_id)
+		if message_channel is None:
+			return
 		
-	message_channel = bot.get_channel(channel_id)
-	if message_channel is None:
-		return
-	
-	message = await message_channel.fetch_message(message_id)
+		message = await message_channel.fetch_message(message_id)
 
-	data = load_data()
-	starboards = [s for s in data['starboards'] if s['guild_id'] == str(guild_id)]
-	
-	for starboard in starboards:
-		if str(emoji) in starboard['emojis']:
-			emoji_count = sum(
-				r.count for r in message.reactions 
-				if str(r.emoji) in starboard['emojis'] and 
-				(r.me is False) and 
-				(user_id != message.author.id or starboard['allow_self_starring'])
-			)
+		data = load_data()
+		starboards = [s for s in data['starboards'] if s['guild_id'] == str(guild_id)]
+		
+		for starboard in starboards:
+			if str(emoji) in starboard['emojis']:
+				unique_users = set()
+				for r in message.reactions:
+					if str(r.emoji) in starboard['emojis']:
+						async for user in r.users():
+							if (user != bot.user) and (user != message.author or starboard['allow_self_starring']):
+								unique_users.add(user.id)
 
-			if emoji_count >= starboard['emoji_count']:
+				emoji_count = len(unique_users)
+
 				starred_message = next((msg for msg in starboard['starred_messages'] if msg['message'] == str(message.id)), None)
 
-				embed = discord.Embed(
-					description=message.content,
-					timestamp=datetime.utcnow()
-				)
-				embed.set_author(
-					name=message.author.display_name,
-					icon_url=message.author.avatar.url
-				)
+				if emoji_count >= starboard['emoji_count']:
+					if starred_message:
+						starboard_message_id = starred_message['starboard_message']
+						starboard_channel = bot.get_channel(int(starboard['channel_id']))
+						if starboard_channel:
+							existing_message = await starboard_channel.fetch_message(starboard_message_id)
+							await existing_message.edit(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{channel_id}>", embeds=[create_embed(message, starboard)])
+							starred_message['stars'] = emoji_count
+							save_data(data)
+					else:
+						starboard_channel = bot.get_channel(int(starboard['channel_id']))
+						if starboard_channel:
+							sent_message = await starboard_channel.send(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{channel_id}>", embeds=[create_embed(message, starboard)])
+							starboard['starred_messages'].append({
+								"message": str(message.id),
+								"starboard_message": sent_message.id,
+								"stars": emoji_count
+							})
+							save_data(data)
+					break
+	
+	message_locks.pop(message_id, None)
 
-				embed.add_field(name="**Source**", value=f"[Jump!]({message.jump_url})", inline=False)
-				
-				if message.attachments:
-					for attachment in message.attachments:
-						if not attachment.url.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.mp4', '.webm', '.webp')):
-							embed.add_field(name="**Attachment**", value=attachment.url, inline=False)
+def create_embed(message, starboard):
+	embed = discord.Embed(
+		description=message.content,
+		timestamp=datetime.utcnow()
+	)
+	embed.set_author(
+		name=message.author.display_name,
+		icon_url=message.author.avatar.url
+	)
+	embed.add_field(name="**Source**", value=f"[Jump!]({message.jump_url})", inline=False)
 
-				if message.attachments:
-					embed.set_image(url=message.attachments[0].url)
+	if message.attachments:
+		for attachment in message.attachments:
+			if not attachment.url.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.mp4', '.webm', '.webp')):
+				embed.add_field(name="**Attachment**", value=attachment.url, inline=False)
 
-				footer_text = str(message.id)
-				embed.set_footer(text=footer_text)
+	if message.attachments:
+		embed.set_image(url=message.attachments[0].url)
 
-				embed.color = int(starboard['color'].lstrip('#'), 16)
+	footer_text = str(message.id)
+	embed.set_footer(text=footer_text)
+	embed.color = int(starboard['color'].lstrip('#'), 16)
 
-				if starred_message:
-					starboard_message_id = starred_message['starboard_message']
-					starboard_channel = bot.get_channel(int(starboard['channel_id']))
-					if starboard_channel:
-						existing_message = await starboard_channel.fetch_message(starboard_message_id)
-						await existing_message.edit(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{channel_id}>", embeds=[embed])
-						starred_message['stars'] = emoji_count
-						save_data(data)
-				else:
-					channel = bot.get_channel(int(starboard['channel_id']))
-					if channel is None:
-						return
-					starboard_channel = bot.get_channel(int(starboard['channel_id']))
-					if starboard_channel:
-						sent_message = await channel.send(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{channel_id}>", embeds=[embed])
-						starred_message = {
-							"message": str(message.id),
-							"starboard_message": sent_message.id,
-							"stars": emoji_count
-						}
-						starboard['starred_messages'].append(starred_message)
-						save_data(data)
-				break
+	return embed
 
 bot.run(token)
