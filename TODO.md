@@ -3,10 +3,12 @@
 - [ ] Member filter option for starboards
 - [ ] Role filter option for starboards
 - [ ] Fix edit command
-- [ ] Slash command
+- [ ] Slash commands
 - [ ] Restructure code (src files, functions, etc)
 - [ ] Disallow/allow nsfw channel option for starboards
 - [ ] Error handling
 - [ ] Transfering between starboards
 - [ ] Warning for deleting starboards
 - [ ] Prevent duplicate starboards
+- [ ] Help command
+- [ ] Better create command
