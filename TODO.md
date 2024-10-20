@@ -16,3 +16,5 @@
 - [ ] Fix embed attachments sent via a link
 - [ ] Fix the same user counting multiple times with multiple different emojis.
 - [ ] Fix embed/message not updating on reaction removal/clear. 
+- [ ] convert starboards.json to a database
+- [ ] Handle deleting messages/starboard messages

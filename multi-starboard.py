@@ -45,7 +45,7 @@ async def create_starboard(ctx, *, args: str):
 	args = args.split()
 	channel_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--channel=')), "this")
 	name = next((arg.split('=')[1] for arg in args if arg.startswith('--name=')), "Starboard")
-	emojis_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--emojis=')), "🌟,⭐,✨")
+	emojis_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--emojis=')), "⭐,🌟,✨")
 	requirement_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--requirement=') or arg.startswith('--count=')), 5)
 	self_starring_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--allow_self_star=') or arg.startswith('--self=')), "false")
 	color_arg = next((arg.split('=')[1] for arg in args if arg.startswith('--color=') or arg.startswith('--col=') or arg.startswith('--colour=')), "#ffffff")
