@@ -7,3 +7,5 @@
 - [ ] Restructure code (src files, functions, etc)
 - [ ] Disallow/allow nsfw channel option for starboards
 - [ ] Error handling
+- [ ] Transfering between starboards
+- [ ] Warning for deleting starboards
