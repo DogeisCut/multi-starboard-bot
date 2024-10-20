@@ -178,7 +178,7 @@ async def on_raw_reaction_add(payload):
 					starboard_channel = bot.get_channel(int(starboard['channel_id']))
 					if starboard_channel:
 						existing_message = await starboard_channel.fetch_message(starboard_message_id)
-						await existing_message.edit(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{starboard_channel.id}>", embeds=[embed])
+						await existing_message.edit(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{channel_id}>", embeds=[embed])
 						starred_message['stars'] = emoji_count
 						save_data(data)
 				else:
@@ -186,14 +186,15 @@ async def on_raw_reaction_add(payload):
 					if channel is None:
 						return
 					starboard_channel = bot.get_channel(int(starboard['channel_id']))
-					sent_message = await channel.send(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{starboard_channel.id}>", embeds=[embed])
-					starred_message = {
-						"message": str(message.id),
-						"starboard_message": sent_message.id,
-						"stars": emoji_count
-					}
-					starboard['starred_messages'].append(starred_message)
-					save_data(data)
+					if starboard_channel:
+						sent_message = await channel.send(content=f"{starboard['emojis'][0]} **{emoji_count}** <#{channel_id}>", embeds=[embed])
+						starred_message = {
+							"message": str(message.id),
+							"starboard_message": sent_message.id,
+							"stars": emoji_count
+						}
+						starboard['starred_messages'].append(starred_message)
+						save_data(data)
 				break
 
 bot.run(token)

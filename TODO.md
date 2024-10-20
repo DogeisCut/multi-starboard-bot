@@ -12,3 +12,5 @@
 - [ ] Prevent duplicate starboards
 - [ ] Help command
 - [ ] Better create command
+- [ ] Fix embed timestamp
+- [ ] Fix embed attachments sent via a link
